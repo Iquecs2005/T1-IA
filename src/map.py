@@ -61,7 +61,7 @@ def map_collumn() -> int:
     _check_for_map_init()
     return _map_collumns
 
-def map_tile_value(pos : tuple[int, int]) -> int:
+def map_tile_value(pos : tuple) -> int:
     _check_for_map_init()
 
     row = pos[0]
@@ -77,14 +77,14 @@ def map_tile_value(pos : tuple[int, int]) -> int:
 
 def map_gym_list():
     _check_for_map_init()
-    return _gym_array
+    return _gym_array.copy()
 
-def map_start_pos() -> tuple[int, int]:
+def map_start_pos() -> tuple:
     _check_for_map_init()
 
     return _map_find_char(START_CHR)
 
-def map_end_pos() -> tuple[int, int]:
+def map_end_pos() -> tuple:
     _check_for_map_init()
     
     return _map_find_char(END_CHR)
@@ -94,7 +94,7 @@ def map_find_gym(gym : str):
 
     return _map_find_char(gym)
 
-def map_get_neighbors_pos(pos : tuple[int, int]) -> list[tuple]:
+def map_get_neighbors_pos(pos : tuple) -> list:
     _check_for_map_init()
     
     neighbors = []
@@ -142,7 +142,7 @@ def _map_find_char(char : str):
     chr_index = _map_array.index(char)
     return _map_index_to_pos(chr_index)
 
-def _map_index_to_pos(index : int) -> tuple[int, int]:
+def _map_index_to_pos(index : int) -> tuple:
     row = index // _map_collumns
     collumn = index % _map_collumns
     return row, collumn
