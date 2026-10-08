@@ -1,10 +1,15 @@
 import random
+import copy
 
 from map import *
 
 __all__ = [
     "generate_combination",
     "valid_entity",
+    "random_swap",
+    "swap",
+    "random_mutation",
+    "mutate"
 ]
 
 """ 
@@ -23,6 +28,11 @@ Modelagem do problema:
 POKEMON_N = 5
 POKEMON_POWER = [1.5, 1.4, 1.3, 1.2, 1.1]
 POKEMON_ENERGY = [6, 6, 6, 6, 5]
+
+MAX_MUTATION_TRIES = 10
+
+#class MutationError(Exception):
+#    
 
 def generate_combination() -> list:
     Entity = []
@@ -70,3 +80,81 @@ def valid_entity(entity : list):
                 continue
 
     return len(gym_list) == 0
+
+def reproduce(entity : list):
+    return
+
+def random_swap(entity : list):
+
+    availableIndex = list(range(len(entity)))
+    pokemon_index = random.sample(availableIndex, k = 2)
+
+    pokemon1 = entity[pokemon_index[0]]
+    pokemon2 = entity[pokemon_index[1]]
+
+    min_power = min(len(pokemon1), len(pokemon2))
+    gym_index = random.randint(0, min_power - 1)
+
+    return swap(entity, pokemon_index[0], pokemon_index[1], gym_index)
+
+def swap(entity : list, pokemon_index_1 : int, pokemon_index_2 : int, gym_index : int) -> list:
+
+    entity = copy.deepcopy(entity)
+
+    pokemon_1 = entity[pokemon_index_1]
+    pokemon_2 = entity[pokemon_index_2]
+
+    gym_1 = pokemon_1[gym_index] 
+    gym_2 = pokemon_2[gym_index] 
+
+    if gym_1 in pokemon_2 or gym_2 in pokemon_1:
+        raise Exception(f"Invalid swap (Repetead Pokemon in Gym): {pokemon_1}, {pokemon_2}, {gym_1}, {gym_2}")
+
+    pokemon_1[gym_index] = gym_2
+    pokemon_2[gym_index] = gym_1
+
+    return entity
+
+def random_mutation(entity : list):
+
+    for _ in range(MAX_MUTATION_TRIES):
+        pokemon_index = random.randint(0, len(entity) - 1)
+        pokemon = entity[pokemon_index]
+        gym_index = random.randint(0, len(pokemon) - 1)
+
+        new_gym = random.choice(map_gym_list())
+        while new_gym in pokemon:
+            new_gym = random.choice(map_gym_list())
+
+        try:
+            mutated_pokemon = mutate(entity, pokemon_index, gym_index, new_gym)
+            return mutated_pokemon
+        except:
+            continue
+
+    raise Exception("Mutation Error: Reached max allowed mutation")
+
+    
+
+def mutate(entity : list, pokemon_index : int, gym_index : int, new_gym : str):
+
+    entity = copy.deepcopy(entity)
+    print(pokemon_index)
+    pokemon = entity[pokemon_index]
+    print(pokemon)
+    gym = pokemon[gym_index]
+
+    total_count = 0
+    for poke in entity:
+        total_count += poke.count(gym)
+
+    if total_count <= 1:
+        raise Exception(f"Invalid mutation (No Pokemon in Gym):\nPokemon: {pokemon}\nGym:{gym}")
+    if new_gym in pokemon:
+        raise Exception(f"Invalid mutation (Repeated Gym):\nPokemon: {pokemon}\nGym:{gym}")
+
+    pokemon[gym_index] = new_gym
+
+    print(entity)
+
+    return entity
