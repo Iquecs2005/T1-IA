@@ -1,0 +1,4 @@
+POKEMON_N = 5
+POKEMON_POWER = [1.5, 1.4, 1.3, 1.2, 1.1]
+POKEMON_ENERGY = [6, 6, 6, 6, 5]
+

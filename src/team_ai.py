@@ -34,6 +34,19 @@ MAX_MUTATION_TRIES = 10
 #class MutationError(Exception):
 #    
 
+def simulate():
+    population = generate_initial_population(1000)
+
+    
+    
+    return
+
+def generate_initial_population(size : int) -> list:
+    population = []
+    for i in range(size):
+        population.append(generate_combination())
+    return population
+
 def generate_combination() -> list:
     Entity = []
     gym_list = map_gym_list()
