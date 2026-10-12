@@ -3,7 +3,6 @@ __all__ = [
     "map_rows",
     "map_collumn",
     "map_tile_value",
-    "map_gym_list",
     "map_start_pos",
     "map_end_pos",
     "map_find_gym",
@@ -22,10 +21,11 @@ END_CHR = 'U'
 _map_array = []
 _map_rows = 0
 _map_collumns = 0
-_gym_array = []
     
 def map_load(file_path : str) -> None:
-    global _map_array, _map_rows, _map_collumns, _gym_array
+    global _map_array, _map_rows, _map_collumns
+
+    _reset_map()
     
     try:
         file = open(file_path, "r")
@@ -45,8 +45,6 @@ def map_load(file_path : str) -> None:
                 continue
             if cost is None:
                 cost = character
-                if character not in [START_CHR, END_CHR]:
-                    _gym_array.append(character)
             _map_array.append(cost)
 
     _gym_array.sort()
@@ -74,10 +72,6 @@ def map_tile_value(pos : tuple) -> int:
         raise IndexError(f"Invalid index {row} {collumn}")
 
     return _map_array[_map_collumns * row + collumn]
-
-def map_gym_list():
-    _check_for_map_init()
-    return _gym_array.copy()
 
 def map_start_pos() -> tuple:
     _check_for_map_init()
@@ -155,3 +149,12 @@ def _map_negative_index(row : int, collumn : int):
         collumn = _map_collumns + collumn
 
     return row, collumn
+
+def _reset_map():
+    global _map_array, _map_rows, _map_collumns, _gym_array
+
+    _map_array = []
+    _map_rows = 0
+    _map_collumns = 0
+
+    _gym_array = []

@@ -1,23 +1,23 @@
 import random
+import math
 import copy
 
-from map import *
+from pokemon import *
+from gym import *
 
 __all__ = [
-    "generate_combination",
+    "new_entity",
     "valid_entity",
-    "random_swap",
-    "swap",
-    "random_mutation",
-    "mutate"
+    "print_entity",
+    "simulate",
+    "_swap"
 ]
 
 """ 
 Modelagem do problema:
-    O estado é representado por uma lista que contem sublistas representando cada um dos pokemons,
-    nesse caso serão 5 sublistas.
-    Cada sublista, que representa um pokemon, tem 6 elementos que representam as batalhas de ginasio
-    na qual ele vai participar. 
+    O estado é representado por um dicionario onde as chaves são os ginasios e o conteudo é uma lista
+    de tamanho igual ao numero total de pokemons, onde cada elemento é True ou False dependendo se o
+    pokemon com aquele indice irá lutar naquele ginasio.
     Heuristicas:
         - O pokemon mais fraco tem 5 elementos, já que é necessario que um pokemon esteja vivo no final
         - Todos os pokemons devem ser usados ao maximo
@@ -25,149 +25,211 @@ Modelagem do problema:
 
 # Entity = [[]]
 
-POKEMON_N = 5
-POKEMON_POWER = [1.5, 1.4, 1.3, 1.2, 1.1]
-POKEMON_ENERGY = [6, 6, 6, 6, 5]
+def new_entity() -> dict[list]:
+    pokemon_initial_state()
+    gym_list = get_gym_list()
 
-MAX_MUTATION_TRIES = 10
-
-#class MutationError(Exception):
-#    
-
-def simulate():
-    population = generate_initial_population(1000)
-
-    
-    
-    return
-
-def generate_initial_population(size : int) -> list:
-    population = []
-    for i in range(size):
-        population.append(generate_combination())
-    return population
-
-def generate_combination() -> list:
-    Entity = []
-    gym_list = map_gym_list()
-    
-    free_pokemon = list(range(POKEMON_N))
-
-    for _ in POKEMON_ENERGY:
-        Entity.append([])
-
+    entity : dict[list] = dict()
     for gym in gym_list:
-        n = random.randint(0, len(free_pokemon)-1)
-        index = free_pokemon[n]
-        Entity[index].append(gym)
-        if len(Entity[index]) >= POKEMON_ENERGY[index]:
-            free_pokemon.pop(n)
+        entity[gym] = []
+        for _ in range(pokemon_amount()):
+            entity[gym].append(False)
 
-    for index, pokemon in enumerate(Entity):
-        while len(pokemon) < POKEMON_ENERGY[index]:
-            gym = random.choice(gym_list)
-            if gym not in pokemon:
-                pokemon.append(gym)
+    # Choose at least one pokemon for each gym 
+    for gym in gym_list:
+        free_pokemon = get_random_available_pokemon()
+        entity[gym][free_pokemon] = True
+        pokemon_allocate(free_pokemon, gym)
 
-    # for i, energy in enumerate(POKEMON_ENERGY):
-    #     Entity.append([])
-    #     for _ in range(energy):
-    #         gym = random.choice(gym_list)
-    #         Entity[i].append(gym)
+    # Add pokemon until all are unavailable
+    while not all_pokemon_unavailable():
+        gym = random.choice(gym_list)
+        free_pokemon = get_random_available_pokemon()
+        if not entity[gym][free_pokemon]:
+            entity[gym][free_pokemon] = True
+            pokemon_allocate(free_pokemon, gym)
 
-    if valid_entity(Entity):
-        return Entity
+    if valid_entity(entity):
+        return entity
     
     return None
         
-def valid_entity(entity : list):
-    gym_list = map_gym_list()
-    for pokemon in entity:
-        for gym in pokemon:
-            gym_count = pokemon.count(gym)
-            if gym_count > 1:
-                return False
-            try:
-                gym_list.remove(gym)
-            except:
-                continue
+def valid_entity(entity : dict[list]) -> bool:
+    gym_list = get_gym_list()
 
-    return len(gym_list) == 0
+    if len(entity) != len(gym_list):
+        return False
+    
+    pokemon_count = []
+    for _ in range(pokemon_amount()):
+        pokemon_count.append(0)
 
-def reproduce(entity : list):
+    for gym in entity:
+        if gym not in gym_list:
+            return False
+        
+        pokemon_list = entity[gym]
+
+        if pokemon_list.count(True) == 0:
+            return False
+
+        for index, value in enumerate(pokemon_list):
+            if value:
+                pokemon_count[index] += 1
+
+    for pokemon_index, pokemon_count in enumerate(pokemon_count):
+        if pokemon_max_energy(pokemon_index) != pokemon_count:
+            return False
+
+    return True
+
+def print_entity(entity : dict[list]) -> None:
+    for gym in entity:
+        print(f"{gym}:  ", end = "")
+        
+        pokemon_list = entity[gym]
+        
+        print("%-5s" % str(pokemon_list[0]), end = "")
+        for value in pokemon_list[1:]:
+            print("   %-5s" % str(value), end="")
+        print()
+
     return
 
-def random_swap(entity : list):
-
-    availableIndex = list(range(len(entity)))
-    pokemon_index = random.sample(availableIndex, k = 2)
-
-    pokemon1 = entity[pokemon_index[0]]
-    pokemon2 = entity[pokemon_index[1]]
-
-    min_power = min(len(pokemon1), len(pokemon2))
-    gym_index = random.randint(0, min_power - 1)
-
-    return swap(entity, pokemon_index[0], pokemon_index[1], gym_index)
-
-def swap(entity : list, pokemon_index_1 : int, pokemon_index_2 : int, gym_index : int) -> list:
-
-    entity = copy.deepcopy(entity)
-
-    pokemon_1 = entity[pokemon_index_1]
-    pokemon_2 = entity[pokemon_index_2]
-
-    gym_1 = pokemon_1[gym_index] 
-    gym_2 = pokemon_2[gym_index] 
-
-    if gym_1 in pokemon_2 or gym_2 in pokemon_1:
-        raise Exception(f"Invalid swap (Repetead Pokemon in Gym): {pokemon_1}, {pokemon_2}, {gym_1}, {gym_2}")
-
-    pokemon_1[gym_index] = gym_2
-    pokemon_2[gym_index] = gym_1
-
-    return entity
-
-def random_mutation(entity : list):
-
-    for _ in range(MAX_MUTATION_TRIES):
-        pokemon_index = random.randint(0, len(entity) - 1)
-        pokemon = entity[pokemon_index]
-        gym_index = random.randint(0, len(pokemon) - 1)
-
-        new_gym = random.choice(map_gym_list())
-        while new_gym in pokemon:
-            new_gym = random.choice(map_gym_list())
-
-        try:
-            mutated_pokemon = mutate(entity, pokemon_index, gym_index, new_gym)
-            return mutated_pokemon
-        except:
-            continue
-
-    raise Exception("Mutation Error: Reached max allowed mutation")
-
+def simulate(initial_population_size : int,
+             max_generations : int,
+             parents_per_generation : int,
+             entity_lifespan : int) -> tuple[dict, float]:
     
+    population = _generate_initial_population(initial_population_size)
+    minimum_entity = []
+    minimum_time = math.inf
 
-def mutate(entity : list, pokemon_index : int, gym_index : int, new_gym : str):
+    for _ in range(max_generations):
+        _age_population(population)
 
-    entity = copy.deepcopy(entity)
-    print(pokemon_index)
-    pokemon = entity[pokemon_index]
-    print(pokemon)
-    gym = pokemon[gym_index]
+        minimum_entity, minimum_time = _min_time(population, minimum_entity, minimum_time)
 
-    total_count = 0
-    for poke in entity:
-        total_count += poke.count(gym)
+        parents = _select_parents(population, parents_per_generation)
+        children = _reproduce(parents)
+        young_population = _remove_oldest(population, entity_lifespan)
 
-    if total_count <= 1:
-        raise Exception(f"Invalid mutation (No Pokemon in Gym):\nPokemon: {pokemon}\nGym:{gym}")
-    if new_gym in pokemon:
-        raise Exception(f"Invalid mutation (Repeated Gym):\nPokemon: {pokemon}\nGym:{gym}")
+        population = young_population
+        population.extend(children)
 
-    pokemon[gym_index] = new_gym
+    return minimum_entity, minimum_time
 
-    print(entity)
+def _generate_initial_population(size : int) -> list[list[dict, int]]:
+    population = []
+    for _ in range(size):
+        population.append([new_entity(), 0])
+    return population
 
-    return entity
+def _age_population(population : list[list[dict, int]]) -> list[list[dict, int]]:
+    for i in population:
+        i[1] += 1
+
+    return population
+
+def _min_time(population : list[list[dict, int]], minimum_entity : dict[list], minimum_time : float) -> tuple[dict, float]:
+    for entity in population:
+        total_time = _fitness_function(entity[0])
+        if total_time < minimum_time:
+            minimum_time = total_time
+            minimum_entity = entity[0].copy()
+    
+    return minimum_entity, minimum_time
+
+def _fitness_function(entity : dict[list]) -> float:
+    total_time = 0
+
+    for gym in entity:
+        pokemon_list = entity[gym]
+        power = pokemon_battle_power(pokemon_list)
+        total_time += gym_battle_time(gym, power)
+
+    return total_time
+
+def _total_fitness(population : list[list[dict, int]]) -> float:
+    total_time = 0
+
+    for entity in population:
+        total_time += _fitness_function(entity[0])
+    
+    return total_time
+
+def _select_parent(population : list[list[dict, int]], total_fitness : float):
+    n = random.uniform(0, 1)
+    current_amount = 0
+
+    for entity in population:
+        prob = _fitness_function(entity[0]) / total_fitness
+        current_amount += prob
+        if n < current_amount:
+            return entity[0]
+
+def _select_parents(population, amount : int) -> list[dict]:
+    parents = []
+    total_fitness = _total_fitness(population)
+    for _ in range(amount):
+        parents.append(_select_parent(population, total_fitness))
+    return parents
+
+def _reproduce(parents : list[dict]) -> list[list[dict, int]]:
+    children = []
+    for entity in parents:
+        children.append([_swap(entity), 0])
+    return children
+
+def _swap(entity : dict[list]) -> dict[list]:
+    child_entity = copy.deepcopy(entity)
+    keys = list(entity.keys())
+    gym = None
+
+    while keys != []:
+        gym = random.choice(keys)
+        keys.remove(gym)
+
+        selected_gym : list = entity[gym]
+
+        pokemon_in_gym = selected_gym.count(True)
+        if pokemon_in_gym < 1:
+            raise Exception()
+        elif pokemon_in_gym > 1:
+            break
+    else:
+        raise Exception()
+
+    possible_index = list(range(len(selected_gym)))
+    index = None
+
+    while possible_index != []:
+        index = random.choice(possible_index)
+        possible_index.remove(index)
+        if selected_gym[index]:
+            break
+    else:
+        raise Exception()
+
+    keys = list(entity.keys())
+    keys.remove(gym)
+
+    while keys != []:
+        second_gym = random.choice(keys)
+        keys.remove(second_gym)
+
+        if not entity[second_gym][index]:
+            child_entity[gym][index] = False
+            child_entity[second_gym][index] = True
+            break
+    else:
+        raise Exception()
+
+    return child_entity
+
+def _remove_oldest(population, entity_lifespan):
+    young_population = []
+    for entity in population:
+        if entity[1] < entity_lifespan:
+            young_population.append(entity)
+    return young_population
