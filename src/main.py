@@ -24,15 +24,21 @@ def main():
     # entity = new_entity()
     # print_entity(entity)
     # print()
-    # child = _swap(entity)
+    # child = _single_swap(entity)
     # print()
     # print_entity(child)
 
-    entity, time = simulate(initial_population_size=500, max_generations=500, parents_per_generation=500, entity_lifespan=5)
+    for i in range(2):
+        entity, time = simulate(initial_population_size = 5000,
+                                max_generations = 1000,
+                                children_per_generation = 1000,
+                                new_elements_per_generation = 1000,
+                                entity_lifespan = 5,
+                                no_improvement_max = 15)
 
-    print(f"Battle min time = {time}\n")
-    print(f"Entity:\n")
-    print_entity(entity)
+        print(f"Battle min time = {time}\n")
+        print(f"Entity:\n")
+        print_entity(entity)
 
 
 if __name__ == "__main__":
