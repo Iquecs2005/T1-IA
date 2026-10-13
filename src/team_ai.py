@@ -172,7 +172,7 @@ def _total_fitness(population : list[list[dict, int]]) -> float:
     total_time = 0
 
     for entity in population:
-        total_time += _fitness_function(entity[0])
+        total_time += 1 / _fitness_function(entity[0])
     
     return total_time
 
@@ -181,7 +181,7 @@ def _select_parent(population : list[list[dict, int]], total_fitness : float):
     current_amount = 0
 
     for entity in population:
-        prob = _fitness_function(entity[0]) / total_fitness
+        prob = (1 / _fitness_function(entity[0])) / total_fitness
         current_amount += prob
         if n < current_amount:
             return entity[0]
@@ -196,7 +196,7 @@ def _select_parents(population, amount : int) -> list[dict]:
 def _reproduce(parents : list[dict]) -> list[list[dict, int]]:
     children = []
     for entity in parents:
-        swap_amounts = random.randint(0, 10)
+        swap_amounts = random.randint(1, 10)
         child_entity = copy.deepcopy(entity)
         for i in range(swap_amounts):
             child_entity = _random_swap(child_entity)
