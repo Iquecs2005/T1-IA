@@ -1,4 +1,5 @@
 from map import *
+from team import *
 from team_ai import *
 
 def main():
@@ -29,16 +30,37 @@ def main():
     # print_entity(child)
 
     #for i in range(2):
-    entity, time = simulate(initial_population_size = 1000,
-                            max_generations = 1000,
-                            children_per_generation = 500,
-                            new_elements_per_generation = 500,
-                            entity_lifespan = 3,
-                            no_improvement_max = 30)
+    # entity, time = simulate(initial_population_size = 1000,
+    #                         max_generations = 1000,
+    #                         children_per_generation = 500,
+    #                         new_elements_per_generation = 500,
+    #                         entity_lifespan = 3,
+    #                         no_improvement_max = 30)
 
-    print(f"Battle min time = {time}\n")
-    print(f"Entity:\n")
-    print_entity(entity)
+    # initial_population_size = 1000
+    # max_generations = 1000
+    # children_per_generation = 500
+    # new_elements_per_generation = 500
+    # entity_lifespan = 3
+    # no_improvement_max = 30
+
+    initial_population_size = 1000
+    max_generations = 1000
+    children_per_generation = 500
+    new_elements_per_generation = 100
+    entity_lifespan = 5
+    no_improvement_max = 50
+
+    team, time = simulate(initial_population_size,
+                            max_generations,
+                            children_per_generation,
+                            new_elements_per_generation,
+                            entity_lifespan,
+                            no_improvement_max)
+
+    print(f"Tempo Total batalhas = {time}\n")
+    print(f"Time encontrado:\n")
+    print_team(team)
 
 
 if __name__ == "__main__":

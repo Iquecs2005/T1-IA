@@ -1,7 +1,8 @@
 import pytest
+from unittest.mock import patch
 
 from team_ai import *
-from map import *
+from team_ai import _calculate_prob, _total_fitness, _fitness_function, _select_parent
 
 # @pytest.fixture
 # def base_entity():
@@ -21,108 +22,67 @@ from map import *
 #               ['4', '5', '6', '7']]
 #     return entity
 
-@pytest.fixture(scope="module", autouse=True)
-def init():
-    map_load("maps\\kanto.txt")
+@pytest.fixture()
+def basic_population():
+    return [[{'2': [True, False, False, True, False]}, 0],
+            [{'2': [True, True, False, False, False]}, 0]]
 
-def test_new_entity():
-    for _ in range(10):
-        entity = new_entity()
-        assert valid_entity(entity)
-    pass
+def test_fitness_function(basic_population):
+    entity_1 = basic_population[0][0]
+    entity_2 = basic_population[1][0]
 
-# def test_swap_ok(base_entity):
-#     pokemon_index_1 = 0
-#     pokemon_index_2 = 1
-#     gym_index = 0
+    entity_1_fitness = 1 / (35 / (1.5 + 1.2))
+    entity_2_fitness = 1 / (35 / (1.5 + 1.4))
 
-#     swaped_entity = swap(base_entity, pokemon_index_1, pokemon_index_2, gym_index)
+    assert _fitness_function(entity_1) == entity_1_fitness
+    assert _fitness_function(entity_2) == entity_2_fitness
+
+def test_total_fitness(basic_population):
+    entity_1 = basic_population[0][0]
+    entity_2 = basic_population[1][0]
+
+    entity_1_fitness = _fitness_function(entity_1)
+    entity_2_fitness = _fitness_function(entity_2)
+
+    total = entity_1_fitness + entity_2_fitness
+
+    assert _total_fitness(basic_population) == total
+
+def test_calculate_prob(basic_population):
+    entity_1 = basic_population[0][0]
+    entity_2 = basic_population[1][0]
+
+    entity_1_fitness = _fitness_function(entity_1)
+    entity_2_fitness = _fitness_function(entity_2)
+
+    total = _total_fitness(basic_population)
+
+    prob_1 = _calculate_prob(entity_1, total)
+    prob_2 = _calculate_prob(entity_2, total)
+
+    mock_prob_1 = entity_1_fitness / total
+    mock_prob_2 = entity_2_fitness / total
+
+    assert prob_1 == mock_prob_1
+    assert prob_2 == mock_prob_2
+    assert pytest.approx(prob_1 + prob_2) == 1
+
+def test_select_parent(basic_population):
+    total = _total_fitness(basic_population)
+    prob = _calculate_prob(basic_population[0][0], total)
     
-#     assert swaped_entity != base_entity
-#     assert swaped_entity[pokemon_index_1][gym_index] == base_entity[pokemon_index_2][gym_index]
-#     assert swaped_entity[pokemon_index_2][gym_index] == base_entity[pokemon_index_1][gym_index]
-
-# def test_swap_negative_index(base_entity):
-#     pokemon_index_1 = -1
-#     pokemon_index_2 = -2
-#     gym_index = -1
-    
-#     swaped_entity = swap(base_entity, pokemon_index_1, pokemon_index_2, gym_index)
+    with patch('random.uniform') as mock_uniform:
+        mock_uniform.return_value = prob - 0.01
         
-#     assert swaped_entity != base_entity
-#     assert swaped_entity[pokemon_index_1][gym_index] == base_entity[pokemon_index_2][gym_index]
-#     assert swaped_entity[pokemon_index_2][gym_index] == base_entity[pokemon_index_1][gym_index]
+        parent = _select_parent(basic_population, total)
 
-# def test_swap_assymetric_ok(assymetric_entity):
-#     pokemon_index_1 = 0
-#     pokemon_index_2 = 1
-#     gym_index = 0
+        mock_uniform.assert_called_once()
+        assert parent == basic_population[0][0]
 
-#     swaped_entity = swap(assymetric_entity, pokemon_index_1, pokemon_index_2, gym_index)
-            
-#     assert swaped_entity != assymetric_entity
-#     assert swaped_entity[pokemon_index_1][gym_index] == assymetric_entity[pokemon_index_2][gym_index]
-#     assert swaped_entity[pokemon_index_2][gym_index] == assymetric_entity[pokemon_index_1][gym_index]
+    with patch('random.uniform') as mock_uniform:
+        mock_uniform.return_value = prob + 0.01
 
-# def test_swap_invalid_index(base_entity):
-#     pokemon_index_1 = 0
-#     pokemon_index_2 = 1
-#     impossible_pokemon_index = len(base_entity)
-#     gym_index = 0
-#     impossible_gym_index_1 = len(base_entity[pokemon_index_1])
-#     impossible_gym_index_2 = len(base_entity[pokemon_index_2])
+        parent = _select_parent(basic_population, total)
 
-#     with pytest.raises(IndexError):
-#         swap(base_entity, pokemon_index_1, impossible_pokemon_index, gym_index)
-#     with pytest.raises(IndexError):
-#         swap(base_entity, impossible_pokemon_index, pokemon_index_2, gym_index)
-#     with pytest.raises(IndexError):
-#         swap(base_entity, pokemon_index_1, pokemon_index_2, impossible_gym_index_1)
-#     with pytest.raises(IndexError):
-#         swap(base_entity, pokemon_index_1, pokemon_index_2, impossible_gym_index_2)
-
-# def test_swap_assymetric_uneven_acess(assymetric_entity):
-#     pokemon_index_1 = 0
-#     pokemon_index_2 = 1
-#     gym_index = len(assymetric_entity[pokemon_index_2]) - 1 
-
-#     with pytest.raises(IndexError):
-#         swap(assymetric_entity, pokemon_index_1, pokemon_index_2, gym_index)
-
-# def test_swap_impossible(repeated_entity):
-#     pokemon_index_1 = 0
-#     pokemon_index_2 = 1
-#     gym_index = 0
-
-#     with pytest.raises(Exception):
-#         swap(repeated_entity, pokemon_index_1, pokemon_index_2, gym_index)
-
-# def test_random_swap(base_entity):
-#     for i in range(10):
-#         swaped_entity = random_swap(base_entity)
-#         assert swaped_entity != base_entity
-
-# def test_mutation_ok(repeated_entity):
-#     pokemon_index = 0
-#     gym_index = 0
-#     new_gym = '4'
-
-#     mutated_entity = mutate(repeated_entity, pokemon_index, gym_index, new_gym)
-
-#     assert mutated_entity != repeated_entity
-#     assert mutated_entity[pokemon_index][gym_index] == new_gym
-
-# def test_mutation_impossible(base_entity, repeated_entity):
-#     pokemon_index = 0
-#     gym_index = 0
-#     new_gym = '4'
-
-#     with pytest.raises(Exception):
-#         mutate(base_entity, pokemon_index, gym_index, new_gym)
-    
-#     pokemon_index = 0
-#     gym_index = 0
-#     new_gym = '2'
-
-#     with pytest.raises(Exception):
-#         mutate(repeated_entity, pokemon_index, gym_index, new_gym)
+        mock_uniform.assert_called_once()
+        assert parent == basic_population[1][0]

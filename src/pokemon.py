@@ -5,6 +5,7 @@ __all__ = [
     "PokemonAvailableError",
 
     "pokemon_amount",
+    "pokemon_name",
     "pokemon_power",
     "pokemon_max_energy",
     "pokemon_current_energy",
@@ -18,6 +19,7 @@ __all__ = [
 ]
 
 AMOUNT = 5
+NAME = ["Pikachu", "Bulbassauro", "Rattata", "Caterpie", "Weedle"]
 POWER = [1.5, 1.4, 1.3, 1.2, 1.1]
 # Heuristicas: O pokemon mais fraco tem 5 elementos, já que é necessario que um pokemon esteja vivo no final
 MAX_ENERGY = [6, 6, 6, 6, 5]
@@ -46,6 +48,10 @@ class PokemonAvailableError(Exception):
 
 def pokemon_amount() -> int:
     return AMOUNT
+
+
+def pokemon_name(index : int) -> str:
+    return NAME[index]
 
 
 def pokemon_power(index : int) -> int:

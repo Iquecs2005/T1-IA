@@ -1,18 +1,12 @@
 import random
-import math
 import copy
 
 from pokemon import *
 from gym import *
+from team import *
 
 __all__ = [
-    "new_entity",
-    "valid_entity",
-    "print_entity",
     "simulate",
-    "_single_swap",
-    "_double_swap",
-    "_swap",
 ]
 
 """ 
@@ -25,163 +19,84 @@ Modelagem do problema:
         - Todos os pokemons devem ser usados ao maximo
 """
 
-# Entity = [[]]
-
-def new_entity() -> dict[list]:
-    pokemon_initial_state()
-    gym_list = get_gym_list()
-
-    entity : dict[list] = dict()
-    for gym in gym_list:
-        entity[gym] = []
-        for _ in range(pokemon_amount()):
-            entity[gym].append(False)
-
-    # Choose at least one pokemon for each gym 
-    for gym in gym_list:
-        free_pokemon = get_random_available_pokemon()
-        entity[gym][free_pokemon] = True
-        pokemon_allocate(free_pokemon, gym)
-
-    # Add pokemon until all are unavailable
-    while not all_pokemon_unavailable():
-        gym = random.choice(gym_list)
-        free_pokemon = get_random_available_pokemon()
-        if not entity[gym][free_pokemon]:
-            entity[gym][free_pokemon] = True
-            pokemon_allocate(free_pokemon, gym)
-
-    if valid_entity(entity):
-        return entity
-    
-    return None
-        
-def valid_entity(entity : dict[list]) -> bool:
-    gym_list = get_gym_list()
-
-    if len(entity) != len(gym_list):
-        return False
-    
-    pokemon_count = []
-    for _ in range(pokemon_amount()):
-        pokemon_count.append(0)
-
-    for gym in entity:
-        if gym not in gym_list:
-            return False
-        
-        pokemon_list = entity[gym]
-
-        if pokemon_list.count(True) == 0:
-            return False
-
-        for index, value in enumerate(pokemon_list):
-            if value:
-                pokemon_count[index] += 1
-
-    for pokemon_index, pokemon_count in enumerate(pokemon_count):
-        if pokemon_max_energy(pokemon_index) != pokemon_count:
-            return False
-
-    return True
-
-def print_entity(entity : dict[list]) -> None:
-    for gym in entity:
-        print(f"{gym}:  ", end = "")
-        
-        pokemon_list = entity[gym]
-        
-        print("%-5s" % str(pokemon_list[0]), end = "")
-        for value in pokemon_list[1:]:
-            print("   %-5s" % str(value), end="")
-        print()
-
-    return
-
 def simulate(initial_population_size : int,
              max_generations : int,
              children_per_generation : int,
              new_elements_per_generation : int,
              entity_lifespan : int,
              no_improvement_max : int) -> tuple[dict, float]:
+
+    gym_list = get_gym_list()
+    population = _generate_population(initial_population_size, 0, gym_list)
+
+    best_team = population[0][0]
+    best_fit = _fitness_function(population[0][0])
     
-    population = _generate_population(initial_population_size)
-    minimum_entity = []
-    minimum_time = math.inf
-    no_improvement = 0
+    last_improvement = 0
 
-    for _ in range(max_generations):
-        _age_population(population)
+    for generation in range(1, max_generations):
+        best_team, best_fit, improved = _best_team(population, best_team, best_fit)
 
-        minimum_entity, current_minimum_time = _min_time(population, minimum_entity, minimum_time)
-        # TODO Research if this is the correct aproach
-        if minimum_time - current_minimum_time < 0.1:
-            no_improvement += 1
-            if no_improvement >= no_improvement_max:
-                return minimum_entity, current_minimum_time
+        if improved:
+            last_improvement = generation
         else:
-            no_improvement = 0
-
-        minimum_time = current_minimum_time
+            if _early_stop(generation, last_improvement, no_improvement_max):
+                break
 
         parents = _select_parents(population, children_per_generation)
-        children = _reproduce(parents)
-        young_population = _remove_oldest(population, entity_lifespan)
-        new_entities = _generate_population(new_elements_per_generation)
+        children = _reproduce(parents, generation)
+        young_population = _remove_oldest(population, entity_lifespan, generation)
+        new_entities = _generate_population(new_elements_per_generation, generation, gym_list)
 
         population = young_population
         population.extend(children)
         population.extend(new_entities)
 
-    return minimum_entity, minimum_time
+    return best_team, 1 / best_fit
 
-def _generate_population(size : int) -> list[list[dict, int]]:
+def _generate_population(size : int, generation : int, gym_list : list[str]) -> list[list[dict, int]]:
     population = []
     for _ in range(size):
-        population.append([new_entity(), 0])
+        population.append([new_random_team(gym_list), generation])
     return population
 
-def _age_population(population : list[list[dict, int]]) -> list[list[dict, int]]:
-    index = 0
-    for i in population:
-        index += 1
-        i[1] += 1
-
-    return population
-
-def _min_time(population : list[list[dict, int]], minimum_entity : dict[list], minimum_time : float) -> tuple[dict, float]:
-    for entity in population:
-        total_time = _fitness_function(entity[0])
-        if total_time < minimum_time:
-            minimum_time = total_time
-            minimum_entity = entity[0].copy()
+def _best_team(population : list[list[dict, int]], best_team : dict[list], best_fit : float) -> tuple[dict, float, bool]:
+    improved = False
     
-    return minimum_entity, minimum_time
+    for team in population:
+        fitness_value = _fitness_function(team[0])
+        if fitness_value < best_fit:
+            best_fit = fitness_value
+            best_team = team[0].copy()
+            improved = True
+    
+    return best_team, best_fit, improved
 
-def _fitness_function(entity : dict[list]) -> float:
-    total_time = 0
+def _early_stop(current_gen : int, last_improvement : int, no_improvement_max : int) -> bool:
+    if current_gen - last_improvement >= no_improvement_max:
+        return True
+    return False
 
-    for gym in entity:
-        pokemon_list = entity[gym]
-        power = pokemon_battle_power(pokemon_list)
-        total_time += gym_battle_time(gym, power)
-
-    return total_time
+def _fitness_function(team : dict[list]) -> float:
+    return 1 / team_total_battle_time(team)
 
 def _total_fitness(population : list[list[dict, int]]) -> float:
     total_time = 0
 
-    for entity in population:
-        total_time += 1 / _fitness_function(entity[0])
+    for team in population:
+        total_time += _fitness_function(team[0])
     
     return total_time
+
+def _calculate_prob(entity, total):
+    return _fitness_function(entity) / total
 
 def _select_parent(population : list[list[dict, int]], total_fitness : float):
     n = random.uniform(0, 1)
     current_amount = 0
 
     for entity in population:
-        prob = (1 / _fitness_function(entity[0])) / total_fitness
+        prob = _calculate_prob(entity[0], total_fitness)
         current_amount += prob
         if n < current_amount:
             return entity[0]
@@ -193,14 +108,14 @@ def _select_parents(population, amount : int) -> list[dict]:
         parents.append(_select_parent(population, total_fitness))
     return parents
 
-def _reproduce(parents : list[dict]) -> list[list[dict, int]]:
+def _reproduce(parents : list[dict], generation) -> list[list[dict, int]]:
     children = []
     for entity in parents:
         swap_amounts = random.randint(1, 10)
         child_entity = copy.deepcopy(entity)
         for i in range(swap_amounts):
             child_entity = _random_swap(child_entity)
-        children.append([child_entity, 0])
+        children.append([child_entity, generation])
     return children
 
 def _random_swap(entity : dict[list]) -> dict[list]:
@@ -260,9 +175,9 @@ def _swap(entity : dict[list], gym_1 : str, gym_2 : str, pokemon_index : int) ->
 
     return entity
 
-def _remove_oldest(population, entity_lifespan):
+def _remove_oldest(population, entity_lifespan, generation):
     young_population = []
     for entity in population:
-        if entity[1] < entity_lifespan:
+        if generation - entity[1] < entity_lifespan:
             young_population.append(entity)
     return young_population
