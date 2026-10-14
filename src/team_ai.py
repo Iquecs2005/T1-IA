@@ -65,7 +65,7 @@ def _best_team(population : list[list[dict, int]], best_team : dict[list], best_
     
     for team in population:
         fitness_value = _fitness_function(team[0])
-        if fitness_value < best_fit:
+        if fitness_value > best_fit:
             best_fit = fitness_value
             best_team = team[0].copy()
             improved = True

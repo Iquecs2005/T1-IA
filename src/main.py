@@ -45,11 +45,11 @@ def main():
     # no_improvement_max = 30
 
     initial_population_size = 1000
-    max_generations = 1000
-    children_per_generation = 500
-    new_elements_per_generation = 100
+    max_generations = 500
+    children_per_generation = 5000
+    new_elements_per_generation = 500
     entity_lifespan = 5
-    no_improvement_max = 50
+    no_improvement_max = 20
 
     team, time = simulate(initial_population_size,
                             max_generations,
