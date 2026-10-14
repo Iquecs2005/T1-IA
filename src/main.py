@@ -1,6 +1,8 @@
 from map import *
 from team import *
 from team_ai import *
+from route_ai import *
+from pathfinding import generate_distances_matrix, get_route
 
 def main():
     # map_load("maps\\kanto.txt")
@@ -43,6 +45,7 @@ def main():
     # new_elements_per_generation = 500
     # entity_lifespan = 3
     # no_improvement_max = 30
+    map_load("maps/Kanto.txt")
 
     initial_population_size = 1000
     max_generations = 500
@@ -61,6 +64,31 @@ def main():
     print(f"Tempo Total batalhas = {time}\n")
     print(f"Time encontrado:\n")
     print_team(team)
+
+    set_gym_amount(24)
+    set_distances(generate_distances_matrix(get_map(), map_start_pos(), map_end_pos()))
+
+    initial_population_size = 1000
+    max_generations = 1000
+    children_per_generation = 500
+    new_elements_per_generation = 100
+    entity_lifespan = 5
+    no_improvement_max = 50
+
+    route, cost = simulate_route(initial_population_size,
+                            max_generations,
+                            children_per_generation,
+                            new_elements_per_generation,
+                            entity_lifespan,
+                            no_improvement_max)
+
+    print(f"Tempo Total rota = {cost}\n")
+    print(f"Rota encontrada:\n")
+    print_entity(route)
+
+    print("Custo total:", cost + time)
+
+    print(get_route(route))
 
 
 if __name__ == "__main__":
