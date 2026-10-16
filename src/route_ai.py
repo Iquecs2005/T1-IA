@@ -1,7 +1,7 @@
 import random
 import math
 import copy
-from gym import *
+from gym import get_gym_list
 
 __all__ = [
     "set_gym_amount",

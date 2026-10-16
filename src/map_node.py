@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class map_node:
     coord: tuple[int, int]
     gx: int

@@ -2,6 +2,7 @@ from map import *
 from team import *
 from team_ai import *
 from route_ai import *
+from show_route import setup_pygame, show_route
 from pathfinding import generate_distances_matrix, get_route
 
 def main():
@@ -83,7 +84,11 @@ def main():
 
     print("Custo total:", cost + time)
 
-    print(get_route(route))
+    path = get_route(route)
+    print(path)
+
+    map, screen = setup_pygame()
+    show_route(screen, map, path)
 
 
 if __name__ == "__main__":
