@@ -8,6 +8,7 @@ __all__ = [
     "map_find_gym",
     "map_get_neighbors_pos",
     "map_print",
+    "get_map"
 ]
 
 TILE_COSTS = {"M": 200,
@@ -73,7 +74,8 @@ def map_tile_value(pos : tuple) -> int:
 
     return _map_array[_map_collumns * row + collumn]
 
-def map_start_pos() -> tuple:
+
+def map_start_pos() -> tuple[int, int]:
     _check_for_map_init()
 
     return _map_find_char(START_CHR)
@@ -82,6 +84,9 @@ def map_end_pos() -> tuple:
     _check_for_map_init()
     
     return _map_find_char(END_CHR)
+
+def get_map() -> list:
+    return _map_array
 
 def map_find_gym(gym : str):
     _check_for_map_init()
@@ -107,7 +112,8 @@ def map_get_neighbors_pos(pos : tuple) -> list:
         neighbors.append((row, collumn + 1))
 
     return neighbors
-    
+
+
 def map_print() -> None:
     _check_for_map_init()
 
