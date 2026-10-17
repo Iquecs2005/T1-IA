@@ -50,13 +50,6 @@ def main():
     set_gym_amount(24)
     set_distances(generate_distances_matrix(get_map(), map_start_pos(), map_end_pos()))
 
-    initial_population_size = 1000
-    max_generations = 1
-    children_per_generation = 500
-    new_elements_per_generation = 100
-    entity_lifespan = 5
-    no_improvement_max = 50
-
     routes_list = []
 
     for i in range(simulations):

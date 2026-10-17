@@ -1,5 +1,4 @@
 import random
-import math
 import copy
 from gym import get_gym_list
 
@@ -53,27 +52,27 @@ def simulate_route(initial_population_size: int,
              no_improvement_max: int) -> tuple[list, int]:
 
     population = _generate_population(initial_population_size)
-    minimum_entity = []
-    minimum_cost = math.inf
-    no_improvement = 0
 
-    for _ in range(max_generations):
-        _age_population(population)
+    minimum_entity = population[0][0]
+    minimum_cost = _fitness_function(population[0][0])
 
-        minimum_entity, current_minimum_cost = _min_cost(population, minimum_entity, minimum_cost)
-        if minimum_cost - current_minimum_cost < 0.1:
-            no_improvement += 1
-            if no_improvement >= no_improvement_max:
-                return minimum_entity, current_minimum_cost
+    last_improvement = 0
+
+    for generation in range(max_generations):
+        minimum_entity, current_minimum_cost, improved = _min_cost(population, minimum_entity, minimum_cost)
+
+        if improved:
+            last_improvement = generation
         else:
-            no_improvement = 0
+            if _early_stop(generation, last_improvement, no_improvement_max):
+                break
 
         minimum_cost = current_minimum_cost
 
         parents = _select_parents(population, children_per_generation)
-        children = _reproduce(parents)
-        young_population = _remove_oldest(population, entity_lifespan)
-        new_entities = _generate_population(new_elements_per_generation)
+        children = _reproduce(parents, generation)
+        young_population = _remove_oldest(population, entity_lifespan, generation)
+        new_entities = _generate_population(new_elements_per_generation, generation)
 
         population = young_population
         population.extend(children)
@@ -82,32 +81,30 @@ def simulate_route(initial_population_size: int,
     return minimum_entity, minimum_cost
 
 
-def _generate_population(size: int) -> list[list[list, int]]:
+def _generate_population(size: int, generation : int) -> list[list[list, int]]:
     population = []
     for _ in range(size):
-        population.append([new_entity(), 0])
-    return population
-
-
-def _age_population(population: list[list[list, int]]) -> list[list[list, int]]:
-    index = 0
-    for i in population:
-        index += 1
-        i[1] += 1
-
+        population.append([new_entity(), generation])
     return population
 
 
 def _min_cost(population: list[list[list, int]], minimum_entity: list, minimum_cost: int) -> tuple[list, int]:
+    improved = False
 
     for entity in population:
         cost = _fitness_function(entity[0])
-
         if cost < minimum_cost:
             minimum_cost = cost
             minimum_entity = entity[0].copy()
+            improved = True
 
-    return minimum_entity, minimum_cost
+    return minimum_entity, minimum_cost, improved
+
+
+def _early_stop(current_gen : int, last_improvement : int, no_improvement_max : int) -> bool:
+    if current_gen - last_improvement >= no_improvement_max:
+        return True
+    return False
 
 
 def _fitness_function(entity: list) -> int:
@@ -123,15 +120,19 @@ def _fitness_function(entity: list) -> int:
 
     total_cost += distances[current][gym_amount + 1]
 
-    return total_cost
+    return 1 / total_cost
 
 
 def _total_fitness(population: list[list[list, int]]) -> int:
     total_cost = 0
     for entity in population:
-        total_cost += 1 / _fitness_function(entity[0])
+        total_cost += _fitness_function(entity[0])
 
     return total_cost
+
+
+def _calculate_prob(entity, total):
+    return _fitness_function(entity) / total
 
 
 def _select_parent(population: list[list[list, int]], total_fitness: int):
@@ -139,7 +140,7 @@ def _select_parent(population: list[list[list, int]], total_fitness: int):
     current_amount = 0
 
     for entity in population:
-        prob = (1 / _fitness_function(entity[0])) / total_fitness
+        prob = _calculate_prob(entity[0], total_fitness)
         current_amount += prob
         if n < current_amount:
             return entity[0]
@@ -153,14 +154,14 @@ def _select_parents(population: list[list, int], amount: int) -> list[list]:
     return parents
 
 
-def _reproduce(parents: list[list]) -> list[list[list, int]]:
+def _reproduce(parents: list[list], generation) -> list[list[list, int]]:
     children = []
     for entity in parents:
         swap_amounts = random.randint(1, 10)
         child_entity = copy.deepcopy(entity)
         for i in range(swap_amounts):
             child_entity = _random_swap(child_entity)
-        children.append([child_entity, 0])
+        children.append([child_entity, generation])
     return children
 
 
@@ -185,9 +186,9 @@ def _double_swap(entity: list) -> list:
     return entity
 
 
-def _remove_oldest(population: list[list, int], entity_lifespan: int) -> list[list, int]:
+def _remove_oldest(population: list[list, int], entity_lifespan: int, generation : int) -> list[list, int]:
     young_population = []
     for entity in population:
-        if entity[1] < entity_lifespan:
+        if generation - entity[1] < entity_lifespan:
             young_population.append(entity)
     return young_population
