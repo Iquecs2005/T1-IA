@@ -6,14 +6,14 @@ from show_route import setup_pygame, show_route
 from pathfinding import generate_distances_matrix, get_route
 
 def main():
-    simulations = 2
+    simulations = 10
 
-    initial_population_size = 500
-    max_generations = 1
-    children_per_generation = 150
-    new_elements_per_generation = 10
+    initial_population_size = 750
+    max_generations = 10000
+    children_per_generation = 250
+    new_elements_per_generation = 25
     entity_lifespan = 3
-    no_improvement_max = 20
+    no_improvement_max = 500
 
     team_list = []
 
