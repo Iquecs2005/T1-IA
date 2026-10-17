@@ -5,12 +5,12 @@ from team_ai import *
 def main():
     simulations = 10
 
-    initial_population_size = 500
-    max_generations = 500
-    children_per_generation = 150
-    new_elements_per_generation = 10
+    initial_population_size = 750
+    max_generations = 10000
+    children_per_generation = 250
+    new_elements_per_generation = 25
     entity_lifespan = 3
-    no_improvement_max = 20
+    no_improvement_max = 500
 
     team_list = []
 
