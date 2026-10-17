@@ -1,33 +1,33 @@
 # T1-IA
 
-Tempo Total batalhas = 1515.6945047705917
+Tempo Total batalhas = 1514.431021876674
 
 Time encontrado:
 
 2:  Weedle
-3:  Caterpie
-4:  Weedle
+3:  Bulbassauro
+4:  Rattata
 5:  Caterpie
-6:  Rattata
-7:  Caterpie
-8:  Bulbassauro
-9:  Bulbassauro
-B:  Rattata
-C:  Bulbassauro
-D:  Rattata, Weedle
+6:  Caterpie
+7:  Rattata
+8:  Pikachu
+9:  Caterpie
+B:  Caterpie
+C:  Pikachu
+D:  Bulbassauro
 E:  Rattata
-G:  Pikachu
-H:  Bulbassauro
+G:  Weedle
+H:  Rattata
 I:  Pikachu
-J:  Bulbassauro
+J:  Pikachu
 K:  Pikachu
-L:  Pikachu
-N:  Bulbassauro
-O:  Rattata, Caterpie
-P:  Caterpie, Weedle
-Q:  Pikachu
-S:  Rattata, Caterpie
-T:  Pikachu, Weedle
+L:  Bulbassauro
+N:  Bulbassauro, Weedle
+O:  Rattata, Weedle
+P:  Pikachu
+Q:  Caterpie, Weedle
+S:  Bulbassauro, Caterpie
+T:  Bulbassauro, Rattata
 
 Energia:
 

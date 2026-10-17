@@ -78,7 +78,7 @@ def simulate_route(initial_population_size: int,
         population.extend(children)
         population.extend(new_entities)
 
-    return minimum_entity, minimum_cost
+    return minimum_entity, 1 / minimum_cost
 
 
 def _generate_population(size: int, generation : int) -> list[list[list, int]]:
