@@ -93,7 +93,7 @@ def _min_cost(population: list[list[list, int]], minimum_entity: list, minimum_c
 
     for entity in population:
         cost = _fitness_function(entity[0])
-        if cost < minimum_cost:
+        if cost > minimum_cost:
             minimum_cost = cost
             minimum_entity = entity[0].copy()
             improved = True
