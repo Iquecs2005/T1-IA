@@ -51,7 +51,7 @@ def simulate_route(initial_population_size: int,
              entity_lifespan: int,
              no_improvement_max: int) -> tuple[list, int]:
 
-    population = _generate_population(initial_population_size)
+    population = _generate_population(initial_population_size, 0)
 
     minimum_entity = population[0][0]
     minimum_cost = _fitness_function(population[0][0])
