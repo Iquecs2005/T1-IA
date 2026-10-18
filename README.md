@@ -36,3 +36,12 @@ Bulbassauro:    0 / 6
 Rattata:        0 / 6
 Caterpie:       0 / 6
 Weedle:         1 / 6
+
+
+Rota:
+
+Melhor tempo: 1543.0
+
+Melhor rota:
+
+1 -> T -> S -> 5 -> 6 -> C -> 8 -> L -> H -> N -> K -> J -> 4 -> D -> E -> 3 -> 7 -> B -> 9 -> G -> I -> P -> 2 -> O -> Q -> U
